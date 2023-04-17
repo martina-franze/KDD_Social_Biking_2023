@@ -1,5 +1,4 @@
-# KDD_Social_Biking
-A Knowledge Discovery / Data Mining Analysis of Hourly Bike-Sharing Patterns
+# A Knowledge Discovery and Data Mining Analysis of Hourly Bike-Sharing Patterns
 
 <p align="center">
   <img src="./images/DALL·E 2023-04-17 16.00.09.png" alt="Social_Biking">
