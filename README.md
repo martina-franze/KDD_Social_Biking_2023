@@ -1,3 +1,24 @@
+1-Presentation
+2-answering the questions after the presentation
+
+A- There are several data sources available. Decide by yourself, which data you want to concern in your project (Question A).
+B- Download the data; decide and justify how you manage the data in your management system.(Question B).
+C- Prepare the data, for instance by inspecting + discussing each attribute by a visualisation, by repairing the data if needed, by adding additional attributes if beneficial, et cetera. Use the terminolgoy and justify your decision (Question C).
+D- Analyse your data with an application of your choice: Association Discovery, Clustering, Classification, or another application (Question D).
+E and F- Interpret and discuss the results (Question E) and proposed a resulting activity (Question F)
+
+
+3- Summary of up to 1500 words (without bibliography; screenshots)
+Please let me know who is responsible for which task
+
+
+
+
+
+
+
+
+
 ## A Knowledge Discovery and Data Mining Analysis of Hourly Bike-Sharing Patterns
 
 <p align="center">
