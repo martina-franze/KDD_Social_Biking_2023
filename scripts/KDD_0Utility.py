@@ -2,6 +2,7 @@
 #They often include helper functions for data cleaning, data transformation, or data visualization.
 
 def model(df):
+    # part 4
     # Define global variables
     global nw_count_pred
     global count_pred
@@ -37,4 +38,54 @@ def model(df):
     RF = RandomForestRegressor(n_estimators=a['n_estimators'], max_depth=a['max_depth'],
                                min_samples_leaf=a['min_samples_leaf'], random_state=0)
     model_1 = RF.fit(x, y)
+
+
+
+#Utility scripts: These files contain reusable functions or modules that can be used across different parts of the project. 
+#They often include helper functions for data cleaning, data transformation, or data visualization.
+
+
+def predict_bike_rentals(data):
+    # original model_test function part 6 
+    global predicted_workday_counts
+    global predicted_non_workday_counts
+    global predicted_counts
+    
+    # Split the data into workdays and non-workdays based on the 'workingday' column
+    workdays = data[data['workingday'] == 1]
+    non_workdays = data[data['workingday'] == 0]
+    
+    # Predict the number of registered users for workdays
+    x = workdays
+    workday_reg_predictions = trained_model_1.predict(x)
+    
+    # Predict the number of casual users for workdays
+    x = workdays
+    workday_casual_predictions = trained_model_2.predict(x)
+
+    # Combine the predicted values for registered and casual users for workdays
+    predicted_workday_counts = pd.DataFrame()
+    predicted_workday_counts['casual'] = workday_casual_predictions
+    predicted_workday_counts['registered'] = workday_reg_predictions
+    predicted_workday_counts['total_count'] = workday_casual_predictions + workday_reg_predictions
+    predicted_workday_counts.index = x.index
+
+    # Predict the number of registered users for non-workdays
+    x = non_workdays
+    non_workday_reg_predictions = trained_model_3.predict(x)
+
+    # Predict the number of casual users for non-workdays
+    x = non_workdays
+    non_workday_casual_predictions = trained_model_4.predict(x)
+
+    # Combine the predicted values for registered and casual users for non-workdays
+    predicted_non_workday_counts = pd.DataFrame()
+    predicted_non_workday_counts['casual'] = non_workday_casual_predictions
+    predicted_non_workday_counts['registered'] = non_workday_reg_predictions
+    predicted_non_workday_counts['total_count'] = non_workday_casual_predictions + non_workday_reg_predictions
+    predicted_non_workday_counts.index = x.index
+
+    # Concatenate the predicted values for workdays and non-workdays
+    predicted_counts = pd.concat([predicted_workday_counts['total_count'], predicted_non_workday_counts['total_count']])
+    predicted_counts.sort_index(inplace=True)
 
