@@ -262,7 +262,7 @@ def modelSelector(data, target_attribute):
 
 
     parameter_list = ['acc', 'prec', 'rec', 'f1', 'kappa', 'fpr', 'tpr', 'auc', 'cm']
-
+    final_models = []
     for parameter in parameter_list:
         for opt_model in model_list:
             if opt_model.best_eval[parameter] > previous:
@@ -270,7 +270,7 @@ def modelSelector(data, target_attribute):
                 chosen_model_base_eval = opt_model.base_eval
                 chosen_model_best_eval = opt_model.best_eval
         
-                previous = opt_model.best_eval.parameter
-
-
-    return chosen_model, chosen_model_best_eval, chosen_model_base_eval
+                previous = opt_model.best_eval[parameter]
+        print(parameter, opt_model.model.index(chosen_model))
+        final_models.append([parameter, opt_model.model.index(chosen_model), chosen_model])
+    return final_models, model_list
