@@ -77,11 +77,12 @@ ax6.set_xticklabels(['Clear', 'Mist/Cloudy', 'Light Rain/Snow', 'Heavy Rain/Snow
 ax6.grid(axis='y')
 
 # Create a scatter plot with temperature, bike rental counts, and season
+temperature_new= bike_rental_data.groupby('temp')
 fig7, ax7 = plt.subplots(figsize=(16, 9))
 colors = ['springgreen', 'gold', 'indianred', 'steelblue']
 seasons = ['Spring', 'Summer', 'Fall', 'Winter']
 for i, season in enumerate(seasons):
-    x = bike_rental_data[bike_rental_data['season'] == i+1]['temp']
+    x = (bike_rental_data[bike_rental_data['season'] == i+1]['temp'] * 39) - 8
     y = bike_rental_data[bike_rental_data['season'] == i+1]['cnt']
     s = bike_rental_data[bike_rental_data['season'] == i+1]['cnt']/5
     ax7.scatter(x, y, s=s, alpha=0.5, color=colors[i], label=season)
@@ -90,22 +91,10 @@ ax7.set_xlabel('Temperature (°C)')
 ax7.set_ylabel('Bike Rental Count')
 ax7.legend()
 
-# Compute bike rentals by humidity and season
-bike_rentals_by_humidity = bike_rental_data.groupby(['hum', 'season'])['cnt'].sum().reset_index()
-'''
-# Create a scatter plot with humidity, bike rental counts, and season
-fig8, ax8 = plt.subplots(figsize=(10, 6))
-colors = ['springgreen', 'gold', 'indianred', 'steelblue']
-seasons = ['Spring', 'Summer', 'Fall', 'Winter']
-for i, season in enumerate(seasons):
-    subset = bike_rentals_by_humidity[bike_rentals_by_humidity['season'] == i+1]
-    ax8.scatter(subset['hum'], subset['cnt'], s=subset['cnt']/1000, alpha=0.5, color=colors[i], label=season)
-ax8.set_title('Humidity vs Bike Rental Counts by Season')
-ax8.set_xlabel('Humidity')
-ax8.set_ylabel('Bike Rental Count')
-ax8.legend()
-'''
+
 # Create eighth figure and axis for humidity and bike rental counts
+bike_rentals_by_humidity = bike_rental_data.groupby(['hum', 'season'])['cnt'].sum().reset_index()
+
 fig8, ax8 = plt.subplots(figsize=(16,9))
 sns.scatterplot(data=bike_rental_data, x='hum', y='cnt', hue='season', size='cnt', sizes=(20, 500), alpha=0.7, ax=ax8)
 ax8.set_title('Humidity vs Bike Rental Counts')
@@ -113,14 +102,18 @@ ax8.set_xlabel('Humidity')
 ax8.set_ylabel('Bike Rental Count')
 
 # create a new subplot for the windspeed vs rental counts plot
+bike_rental_data['windspeed_mps'] = bike_rental_data['windspeed'] * 67
+
 fig9, ax9 = plt.subplots(figsize=(12,8))
-sns.scatterplot(data=bike_rental_data, x='windspeed', y='cnt', alpha=0.5, s=bike_rental_data['cnt']/10, c=bike_rental_data['season'], cmap='coolwarm')
+sns.scatterplot(data=bike_rental_data, x='windspeed_mps', y='cnt', alpha=0.5, s=bike_rental_data['cnt']/10, c=bike_rental_data['season'], cmap='coolwarm')
 ax9.set_title('Windspeed vs Rental Counts', fontsize=18)
-ax9.set_xlabel('Windspeed (mph)', fontsize=14)
+ax9.set_xlabel('Windspeed (mps)', fontsize=14)
 ax9.set_ylabel('Rental Counts', fontsize=14)
 cbar= ax9.figure.colorbar(ax9.collections[0])
 cbar.ax.set_ylabel('Season', fontsize=14)
-ax9.set_xlim(0,35)
+ax9.set_xlim(0, 16)
+
+
 
 #Create a new subplot for the hourly rental counts plot
 fig10, ax10 = plt.subplots(figsize=(12,8))
@@ -156,7 +149,7 @@ fig11.savefig('casual_vs_registered.png', dpi=300, bbox_inches='tight')
 
 # Show the figures
 #plt.show()
-
+fig9.show()
 
 
 
