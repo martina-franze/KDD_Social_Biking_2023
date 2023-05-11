@@ -148,8 +148,7 @@ fig10.savefig('hourly_rental_count.png', dpi=300, bbox_inches='tight')
 fig11.savefig('casual_vs_registered.png', dpi=300, bbox_inches='tight')
 
 # Show the figures
-#plt.show()
-fig9.show()
+plt.show()
 
 
 
