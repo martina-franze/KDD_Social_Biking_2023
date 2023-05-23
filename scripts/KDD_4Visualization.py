@@ -3,6 +3,8 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import numpy as np
+
 
 # Load data
 bike_rental_data = pd.read_csv("C:\\Users\\Martina\\PycharmProjects\\KDD_Social_Biking\\data\\hour.csv")
@@ -66,6 +68,7 @@ ax5.set_title('Proportion of Rentals on Working Days vs Non-working Days')
 # Compute bike rentals by weather situation
 bike_rentals_by_weather_situation = bike_rental_data.groupby('weathersit')['cnt'].sum()
 
+
 # Create a bar plot to show the proportion of rentals during each weather situation
 fig6, ax6 = plt.subplots()
 ax6.bar(bike_rentals_by_weather_situation.index, bike_rentals_by_weather_situation.values)
@@ -76,42 +79,61 @@ ax6.set_xticks(range(1, 5))
 ax6.set_xticklabels(['Clear', 'Mist/Cloudy', 'Light Rain/Snow', 'Heavy Rain/Snow'], size=8)
 ax6.grid(axis='y')
 
-# Create a scatter plot with temperature, bike rental counts, and season
-temperature_new= bike_rental_data.groupby('temp')
+
+# Create a scatter plot with temperature and bike rental counts
+
+x = (bike_rental_data['temp'] * 39) - 8
+x_rounded = np.round(x, decimals=2)
+rental_counts = bike_rental_data.groupby(x)['cnt'].count()
+
 fig7, ax7 = plt.subplots(figsize=(16, 9))
-colors = ['springgreen', 'gold', 'indianred', 'steelblue']
-seasons = ['Spring', 'Summer', 'Fall', 'Winter']
-for i, season in enumerate(seasons):
-    x = (bike_rental_data[bike_rental_data['season'] == i+1]['temp'] * 39) - 8
-    y = bike_rental_data[bike_rental_data['season'] == i+1]['cnt']
-    s = bike_rental_data[bike_rental_data['season'] == i+1]['cnt']/5
-    ax7.scatter(x, y, s=s, alpha=0.5, color=colors[i], label=season)
-ax7.set_title('Temperature vs Bike Rental Counts by Season')
+rental_counts.plot(kind='bar', color='steelblue')
+ax7.set_title('Count of Bike Rentals by Temperature')
 ax7.set_xlabel('Temperature (°C)')
-ax7.set_ylabel('Bike Rental Count')
-ax7.legend()
+ax7.set_ylabel('Count of Rentals')
+ax7.set_xticklabels([f'{temp:.2f}' for temp in rental_counts.index])
 
 
 # Create eighth figure and axis for humidity and bike rental counts
-bike_rentals_by_humidity = bike_rental_data.groupby(['hum', 'season'])['cnt'].sum().reset_index()
+bins = [i for i in range(0, 110, 10)]
+labels = ['{}-{}'.format(i, i+10) for i in range(0, 100, 10)]
 
-fig8, ax8 = plt.subplots(figsize=(16,9))
-sns.scatterplot(data=bike_rental_data, x='hum', y='cnt', hue='season', size='cnt', sizes=(20, 500), alpha=0.7, ax=ax8)
-ax8.set_title('Humidity vs Bike Rental Counts')
-ax8.set_xlabel('Humidity')
-ax8.set_ylabel('Bike Rental Count')
+bike_rental_data['hum_category'] = pd.cut(bike_rental_data['hum'], bins=bins, labels=labels)
 
+bike_rental_data['hum_percent'] = (bike_rental_data['hum'] * 100).round(0).astype(int)
+
+bike_rentals_by_humidity = bike_rental_data.groupby('hum_percent')['cnt'].sum().reset_index()
+
+fig8, ax8 = plt.subplots(figsize=(16, 9))
+sns.barplot(data=bike_rentals_by_humidity, x='hum_percent', y='cnt', alpha=0.7, ax=ax8)
+ax8.set_title('Humidity vs Total Bike Rental Counts')
+ax8.set_xlabel('Humidity Category')
+ax8.set_ylabel('Total Bike Rental Count')
+ax8.set_xticks(range(10, 110, 10))
+ax8.set_xticklabels(range(10, 110, 10))
+
+
+'''
 # create a new subplot for the windspeed vs rental counts plot
 bike_rental_data['windspeed_mps'] = bike_rental_data['windspeed'] * 67
 
-fig9, ax9 = plt.subplots(figsize=(12,8))
-sns.scatterplot(data=bike_rental_data, x='windspeed_mps', y='cnt', alpha=0.5, s=bike_rental_data['cnt']/10, c=bike_rental_data['season'], cmap='coolwarm')
+fig9, ax9 = plt.subplots(figsize=(12, 8))
+sns.lineplot(data=bike_rental_data, x='windspeed_mps', y='cnt', ax=ax9)
 ax9.set_title('Windspeed vs Rental Counts', fontsize=18)
 ax9.set_xlabel('Windspeed (mps)', fontsize=14)
 ax9.set_ylabel('Rental Counts', fontsize=14)
-cbar= ax9.figure.colorbar(ax9.collections[0])
-cbar.ax.set_ylabel('Season', fontsize=14)
 ax9.set_xlim(0, 16)
+'''
+
+bike_rental_data['windspeed_mps'] = bike_rental_data['windspeed']
+max_windspeed = int(bike_rental_data['windspeed_mps'].max())
+min_windspeed = int(bike_rental_data['windspeed_mps'].min())
+fig9, ax9 = plt.subplots(figsize=(16, 9))
+sns.barplot(data=bike_rental_data, x='windspeed_mps', y='cnt', ax=ax9)
+ax9.set_title('Windspeed vs Rental Counts', fontsize=18)
+ax9.set_xlabel('Windspeed (mps)', fontsize=14)
+ax9.set_ylabel('Rental Counts', fontsize=14)
+ax9.set_xticklabels(np.round(ax9.get_xticks()).astype(int))
 
 
 
@@ -148,7 +170,7 @@ fig10.savefig('hourly_rental_count.png', dpi=300, bbox_inches='tight')
 fig11.savefig('casual_vs_registered.png', dpi=300, bbox_inches='tight')
 
 # Show the figures
-plt.show()
+#plt.show()
 
 
 
