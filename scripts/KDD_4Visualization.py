@@ -13,8 +13,6 @@ bike_rental_data = pd.read_csv("C:\\Users\\Martina\\PycharmProjects\\KDD_Social_
 monthly_bike_rental_counts = bike_rental_data.groupby(['yr', 'mnth'])['cnt'].mean().reset_index()
 monthly_bike_rental_counts['mnth'] = pd.to_datetime(monthly_bike_rental_counts['mnth'], format='%m').dt.month_name().str.slice(stop=3)
 
-# Compute bike rentals by season
-bike_rentals_by_season = bike_rental_data.groupby('season')['cnt'].sum()
 
 # Compute bike rentals by weekday
 bike_rentals_by_weekday = bike_rental_data.groupby('weekday')['cnt'].mean()
@@ -30,6 +28,9 @@ ax1.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 ax1.plot(monthly_bike_rental_counts[monthly_bike_rental_counts['yr']==0]['mnth'], monthly_bike_rental_counts[monthly_bike_rental_counts['yr']==0]['cnt'], label='2011')
 ax1.plot(monthly_bike_rental_counts[monthly_bike_rental_counts['yr']==1]['mnth'], monthly_bike_rental_counts[monthly_bike_rental_counts['yr']==1]['cnt'], label='2012')
 ax1.legend()
+
+
+bike_rentals_by_season = bike_rental_data.groupby('season')['cnt'].mean()
 
 # Create second figure and axis for bike rentals by season
 fig2, ax2 = plt.subplots()
@@ -66,7 +67,7 @@ ax5.set_ylabel('Average Bike Rental Count')
 ax5.set_title('Proportion of Rentals on Working Days vs Non-working Days')
 
 # Compute bike rentals by weather situation
-bike_rentals_by_weather_situation = bike_rental_data.groupby('weathersit')['cnt'].sum()
+bike_rentals_by_weather_situation = bike_rental_data.groupby('weathersit')['cnt'].mean()
 
 
 # Create a bar plot to show the proportion of rentals during each weather situation
@@ -86,25 +87,25 @@ x = (bike_rental_data['temp'] * 39) - 8
 x_rounded = np.round(x, decimals=2)
 rental_counts = bike_rental_data.groupby(x)['cnt'].count()
 
-fig7, ax7 = plt.subplots(figsize=(16, 9))
+fig7, ax7 = plt.subplots()
 rental_counts.plot(kind='bar', color='steelblue')
 ax7.set_title('Count of Bike Rentals by Temperature')
-ax7.set_xlabel('Temperature (°C)')
-ax7.set_ylabel('Count of Rentals')
-ax7.set_xticklabels([f'{temp:.2f}' for temp in rental_counts.index])
+ax7.set_xlabel('Temperature (°C)', fontsize=12)
+ax7.set_ylabel('Count of Rentals', fontsize=12)
+ax7.set_xticklabels([f'{temp:.1f}' for temp in rental_counts.index], fontsize=6)
 
 
 # Create eighth figure and axis for humidity and bike rental counts
 bins = [i for i in range(0, 110, 10)]
 labels = ['{}-{}'.format(i, i+10) for i in range(0, 100, 10)]
-
 bike_rental_data['hum_category'] = pd.cut(bike_rental_data['hum'], bins=bins, labels=labels)
 
 bike_rental_data['hum_percent'] = (bike_rental_data['hum'] * 100).round(0).astype(int)
 
-bike_rentals_by_humidity = bike_rental_data.groupby('hum_percent')['cnt'].sum().reset_index()
+bike_rentals_by_humidity = bike_rental_data.groupby('hum_percent')['cnt'].mean().reset_index()
 
-fig8, ax8 = plt.subplots(figsize=(16, 9))
+
+fig8, ax8 = plt.subplots()
 sns.barplot(data=bike_rentals_by_humidity, x='hum_percent', y='cnt', alpha=0.7, ax=ax8)
 ax8.set_title('Humidity vs Total Bike Rental Counts')
 ax8.set_xlabel('Humidity Category')
@@ -113,17 +114,6 @@ ax8.set_xticks(range(10, 110, 10))
 ax8.set_xticklabels(range(10, 110, 10))
 
 
-'''
-# create a new subplot for the windspeed vs rental counts plot
-bike_rental_data['windspeed_mps'] = bike_rental_data['windspeed'] * 67
-
-fig9, ax9 = plt.subplots(figsize=(12, 8))
-sns.lineplot(data=bike_rental_data, x='windspeed_mps', y='cnt', ax=ax9)
-ax9.set_title('Windspeed vs Rental Counts', fontsize=18)
-ax9.set_xlabel('Windspeed (mps)', fontsize=14)
-ax9.set_ylabel('Rental Counts', fontsize=14)
-ax9.set_xlim(0, 16)
-'''
 
 bike_rental_data['windspeed_mps'] = bike_rental_data['windspeed']
 max_windspeed = int(bike_rental_data['windspeed_mps'].max())
@@ -133,7 +123,8 @@ sns.barplot(data=bike_rental_data, x='windspeed_mps', y='cnt', ax=ax9)
 ax9.set_title('Windspeed vs Rental Counts', fontsize=18)
 ax9.set_xlabel('Windspeed (mps)', fontsize=14)
 ax9.set_ylabel('Rental Counts', fontsize=14)
-ax9.set_xticklabels(np.round(ax9.get_xticks()).astype(int))
+ax9.set_xticklabels(np.round(ax9.get_xticks()).astype(int), fontsize=14)
+ax9.set_yticklabels(labels, fontsize=14)
 
 
 
