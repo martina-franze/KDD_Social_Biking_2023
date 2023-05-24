@@ -25,7 +25,7 @@ def outlier_cleaner_atemp(data_frame):
     return(data_frame_no_outliers)
 
 def outlier_cleaner_wind(data_frame):
-    upper_bound = data_frame['windspeed'].quantile(0.95)
+    upper_bound = data_frame['windspeed'].quantile(0.97)
     data_frame_no_outliers = data_frame[(data_frame['windspeed'] <= upper_bound)]
     return (data_frame_no_outliers)
 
