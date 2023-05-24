@@ -23,13 +23,13 @@ def outlier_cleaner(data_frame):
 #    lower_bound = data_frame['cnt'].quantile(0.25)
 #    upper_bound = data_frame['cnt'].quantile(0.75)
 #    data_frame_no_outliers = data_frame[(data_frame['cnt'] >= lower_bound) & (data_frame['cnt'] <= upper_bound)]
-    upper_bound = data_frame['atemp'].quantile(0.9)
+    upper_bound = data_frame['atemp'].quantile(0.95)
     data_frame_no_outliers = data_frame[(data_frame['atemp'] <= upper_bound)]
-    upper_bound = data_frame['hum'].quantile(0.9)
+    upper_bound = data_frame['hum'].quantile(0.95)
     data_frame_no_outliers = data_frame[(data_frame['hum'] <= upper_bound)]
-    lower_bound = data_frame['windspeed'].quantile(0.1)
+    lower_bound = data_frame['windspeed'].quantile(0.05)
     data_frame_no_outliers = data_frame[(lower_bound >= data_frame['windspeed'])]
-    return(data_frame_no_outliers)
+    return data_frame
 
 def correlation(data_frame):
     correlation_matrix = data_frame.corr()
