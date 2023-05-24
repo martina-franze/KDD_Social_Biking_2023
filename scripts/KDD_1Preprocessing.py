@@ -1,19 +1,17 @@
 #Data preprocessing scripts: These files contain code that performs data cleaning, feature engineering, data normalization, and other preprocessing tasks. 
 #They often take the raw data files as input and output the cleaned and preprocessed data files that can be used for modeling.
+import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.cluster import KMeans
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
-import numpy as np
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.neural_network import MLPRegressor
-from sklearn.svm import SVR
-from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import cross_val_score
-from sklearn.cluster import KMeans
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor
 
 # Load a CSV file
 daydf = pd.read_csv('C:/Users/ASUS/PycharmProjects/pythonProject/KDD_Social_Biking/data/day.csv')
@@ -23,7 +21,7 @@ hourdf = pd.read_csv('C:/Users/ASUS/PycharmProjects/pythonProject/KDD_Social_Bik
 #print(daydf)
 
 # Check for missing values
-#missing_values_count = daydf.isnull().sum()
+#missing_values_count = hourdf.isnull().sum()
 
 # Print the result
 #print(missing_values_count)
@@ -31,11 +29,11 @@ hourdf = pd.read_csv('C:/Users/ASUS/PycharmProjects/pythonProject/KDD_Social_Bik
 #There is no missing value for daydf:)
 
 # Check for duplicates
-#duplicates = daydf.duplicated()
+#duplicates = hourdf.duplicated()
 #print(duplicates)
 
 # Print the duplicated rows
-#print(daydf[duplicates])
+#print(hourdf[duplicates])
 
 #There is no duplicated rows
 
@@ -44,74 +42,98 @@ hourdf = pd.read_csv('C:/Users/ASUS/PycharmProjects/pythonProject/KDD_Social_Bik
 #print(daydf)
 
 def data_cleaner(data_frame):
+    data_frame["season"].replace({1:4, 2:1, 3:2, 4:3}, inplace=True)
     columns_to_drop = ['instant', 'dteday', 'mnth', 'holiday', 'weekday', 'temp', 'casual', 'registered']
     data_frame = data_frame.drop(columns=columns_to_drop)
     return data_frame
 
 daydf = data_cleaner(daydf)
+print(daydf)
 hourdf = data_cleaner(hourdf)
 
-lower_bound = hourdf['cnt'].quantile(0.15)
-upper_bound = hourdf['cnt'].quantile(0.85)
+def outlier_cleaner(data_frame):
+    lower_bound = data_frame['cnt'].quantile(0.25)
+    upper_bound = data_frame['cnt'].quantile(0.75)
+    data_frame_no_outliers = data_frame[(data_frame['cnt'] >= lower_bound) & (data_frame['cnt'] <= upper_bound)]
+    return(data_frame_no_outliers)
 
-hourdf_no_outliers = hourdf[(hourdf['cnt'] >= lower_bound) & (hourdf['cnt'] <= upper_bound)]
+daydfcl = outlier_cleaner(daydf)
+hourdfcl = outlier_cleaner(hourdf)
 
-print(hourdf_no_outliers)
+print(daydf)
+print(hourdf)
 
-correlation_matrix = daydf.corr()
-correlation_with_target = correlation_matrix['cnt'].abs().sort_values(ascending=False)
-print(correlation_with_target)
+def correlation(data_frame):
+    correlation_matrix = data_frame.corr()
+    correlation_with_target = correlation_matrix['cnt'].sort_values(ascending=False)
+    print(correlation_with_target)
+    return correlation_with_target
 
+correlation(daydfcl)
+correlation(hourdfcl)
 
-# Split into features (X) and target variable (y)
-X = daydf.drop('cnt', axis=1)  # Drop the 'cnt' column from the features
-y = daydf['cnt']  # Select the 'cnt' column as the target variable
+def split_train_test(data_frame):
+    # Split into features (X) and target variable (y)
+    X = data_frame.drop('cnt', axis=1)  # Drop the 'cnt' column from the features
+    y = data_frame['cnt']  # Select the 'cnt' column as the target variable
 
-# Split into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Split into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    return X_train, X_test, y_train, y_test
 
+X_train, X_test, y_train, y_test = split_train_test(hourdfcl)
 
+def LR(X_train, X_test, y_train):
+    # Create an instance of the LinearRegression modellr
+    modellr = LinearRegression()
 
-# Create an instance of the LinearRegression modellr
-modellr = LinearRegression()
+    # Fit the modellr to the training data
+    modellr.fit(X_train, y_train)
 
-# Fit the modellr to the training data
-modellr.fit(X_train, y_train)
+    # Make predictions on the testing data
+    y_predlr = modellr.predict(X_test)
+    return y_predlr
 
-# Make predictions on the testing data
-y_predlr = modellr.predict(X_test)
+y_predlr = LR(X_train, X_test, y_train)
 
-# Calculate the mean squared error
-mse = mean_squared_error(y_test, y_predlr)
+def evaluate(model, y_pred, y_test):
+    mse = mean_squared_error(y_test, y_pred)
 
-# Calculate the root mean squared error
-rmse = np.sqrt(mse)
+    # Calculate the root mean squared error
+    rmse = np.sqrt(mse)
 
-# Calculate the R-squared score
-r2 = r2_score(y_test, y_predlr)
+    # Calculate the R-squared score
+    r2 = r2_score(y_test, y_pred)
 
-# Print the evaluation metrics
-print("Mean Squared Error for Linear Regression:", mse)
-print("Root Mean Squared Error for Linear Regression:", rmse)
-print("R-squared Score for Linear Regression:", r2)
-print('\n')
+    # Print the evaluation metrics
+    print("Mean Squared Error for ", model, ":", mse)
+    print("Root Mean Squared Error for", model, ":", rmse)
+    print("R-squared Score for ", model, ":", r2)
+    print('\n')
 
+    return mse, rmse, r2
 
+evaluate("Linear Regression", y_predlr, y_test)
 
-modeldt = DecisionTreeRegressor()
-modeldt.fit(X_train, y_train)
-y_preddt = modeldt.predict(X_test)
-mse = mean_squared_error(y_test, y_preddt)
-rmse = np.sqrt(mse)
-#mae = mean_absolute_error(y_test, y_preddt)
-r2 = r2_score(y_test, y_preddt)
-print("Mean Squared Error for Decision Tree:", mse)
-print("Root Mean Squared Error for Decision Tree:", rmse)
-#print("Mean Absolute Error for Decision Tree:", mae)
-print("R-squared for Decision Tree:", r2)
-print('\n')
+def DTR(X_train, X_test, y_train):
+    modeldt = DecisionTreeRegressor()
+    modeldt.fit(X_train, y_train)
+    y_pred = modeldt.predict(X_test)
+    return y_pred
 
-modelrf = RandomForestRegressor()
+y_preddtr = DTR(X_train, X_test, y_train)
+evaluate("Decision Tree", y_preddtr, y_test)
+
+def RFR(X_train, X_test, y_train):
+    modelrf = RandomForestRegressor()
+    modelrf.fit(X_train, y_train)
+    y_pred = modelrf.predict(X_test)
+    return y_pred
+
+y_predrfr = RFR(X_train, X_test, y_train)
+evaluate("Random Forest", y_predrfr, y_test)
+
+"""modelrf = RandomForestRegressor()
 modelrf.fit(X_train, y_train)
 y_predrf = modelrf.predict(X_test)
 mse = mean_squared_error(y_test, y_predrf)
@@ -203,16 +225,16 @@ print("Mean MSE: ", mean_mse)
 print("Standard Deviation of MSE: ", std_mse)
 print('\n')
 
-"""model_nn = MLPRegressor(random_state=0)
-model_nn.fit(X_train, y_train)
-y_pred_nn = model_nn.predict(X_test)
-mse_nn = mean_squared_error(y_test, y_pred_nn)
-rmse_nn = np.sqrt(mse_nn)
-r2_nn = r2_score(y_test, y_pred_nn)
-print("Mean Squared Error for Neural Network:", mse_nn)
-print("Root Mean Squared Error for Neural Network:", rmse_nn)
-print("R-squared for Neural Network:", r2_nn)
-print('\n')"""
+#model_nn = MLPRegressor(random_state=0)
+#model_nn.fit(X_train, y_train)
+#y_pred_nn = model_nn.predict(X_test)
+#mse_nn = mean_squared_error(y_test, y_pred_nn)
+#rmse_nn = np.sqrt(mse_nn)
+#r2_nn = r2_score(y_test, y_pred_nn)
+#print("Mean Squared Error for Neural Network:", mse_nn)
+#print("Root Mean Squared Error for Neural Network:", rmse_nn)
+#print("R-squared for Neural Network:", r2_nn)
+#print('\n')
 
 model_svr = SVR()
 model_svr.fit(X_train, y_train)
@@ -238,7 +260,7 @@ std_mse = mse_scores.std()
 print("Mean MSE: ", mean_mse)
 print("Standard Deviation of MSE: ", std_mse)
 print('\n')
-
+"""
 
 
 
