@@ -3,6 +3,8 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import numpy as np
+
 
 # Load data
 bike_rental_data = pd.read_csv("C:\\Users\\Martina\\PycharmProjects\\KDD_Social_Biking\\data\\hour.csv")
@@ -11,8 +13,6 @@ bike_rental_data = pd.read_csv("C:\\Users\\Martina\\PycharmProjects\\KDD_Social_
 monthly_bike_rental_counts = bike_rental_data.groupby(['yr', 'mnth'])['cnt'].mean().reset_index()
 monthly_bike_rental_counts['mnth'] = pd.to_datetime(monthly_bike_rental_counts['mnth'], format='%m').dt.month_name().str.slice(stop=3)
 
-# Compute bike rentals by season
-bike_rentals_by_season = bike_rental_data.groupby('season')['cnt'].sum()
 
 # Compute bike rentals by weekday
 bike_rentals_by_weekday = bike_rental_data.groupby('weekday')['cnt'].mean()
@@ -23,11 +23,14 @@ fig1, ax1 = plt.subplots()
 ax1.set_title('Monthly Bike Rental Counts by Year')
 ax1.set_xlabel('Month')
 ax1.set_ylabel('Average Count')
-ax1.set_xticks(range(1, 13))
+ax1.set_xticks(range(0, 12))
 ax1.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
 ax1.plot(monthly_bike_rental_counts[monthly_bike_rental_counts['yr']==0]['mnth'], monthly_bike_rental_counts[monthly_bike_rental_counts['yr']==0]['cnt'], label='2011')
 ax1.plot(monthly_bike_rental_counts[monthly_bike_rental_counts['yr']==1]['mnth'], monthly_bike_rental_counts[monthly_bike_rental_counts['yr']==1]['cnt'], label='2012')
 ax1.legend()
+
+
+bike_rentals_by_season = bike_rental_data.groupby('season')['cnt'].mean()
 
 # Create second figure and axis for bike rentals by season
 fig2, ax2 = plt.subplots()
@@ -64,7 +67,8 @@ ax5.set_ylabel('Average Bike Rental Count')
 ax5.set_title('Proportion of Rentals on Working Days vs Non-working Days')
 
 # Compute bike rentals by weather situation
-bike_rentals_by_weather_situation = bike_rental_data.groupby('weathersit')['cnt'].sum()
+bike_rentals_by_weather_situation = bike_rental_data.groupby('weathersit')['cnt'].mean()
+
 
 # Create a bar plot to show the proportion of rentals during each weather situation
 fig6, ax6 = plt.subplots()
@@ -76,42 +80,51 @@ ax6.set_xticks(range(1, 5))
 ax6.set_xticklabels(['Clear', 'Mist/Cloudy', 'Light Rain/Snow', 'Heavy Rain/Snow'], size=8)
 ax6.grid(axis='y')
 
-# Create a scatter plot with temperature, bike rental counts, and season
-temperature_new= bike_rental_data.groupby('temp')
-fig7, ax7 = plt.subplots(figsize=(16, 9))
-colors = ['springgreen', 'gold', 'indianred', 'steelblue']
-seasons = ['Spring', 'Summer', 'Fall', 'Winter']
-for i, season in enumerate(seasons):
-    x = (bike_rental_data[bike_rental_data['season'] == i+1]['temp'] * 39) - 8
-    y = bike_rental_data[bike_rental_data['season'] == i+1]['cnt']
-    s = bike_rental_data[bike_rental_data['season'] == i+1]['cnt']/5
-    ax7.scatter(x, y, s=s, alpha=0.5, color=colors[i], label=season)
-ax7.set_title('Temperature vs Bike Rental Counts by Season')
-ax7.set_xlabel('Temperature (°C)')
-ax7.set_ylabel('Bike Rental Count')
-ax7.legend()
+
+# Create a scatter plot with temperature and bike rental counts
+
+x = (bike_rental_data['temp'] * 39) - 8
+x_rounded = np.round(x, decimals=2)
+rental_counts = bike_rental_data.groupby(x)['cnt'].count()
+
+fig7, ax7 = plt.subplots()
+rental_counts.plot(kind='bar', color='steelblue')
+ax7.set_title('Count of Bike Rentals by Temperature')
+ax7.set_xlabel('Temperature (°C)', fontsize=12)
+ax7.set_ylabel('Count of Rentals', fontsize=12)
+ax7.set_xticklabels([f'{temp:.1f}' for temp in rental_counts.index], fontsize=6)
 
 
 # Create eighth figure and axis for humidity and bike rental counts
-bike_rentals_by_humidity = bike_rental_data.groupby(['hum', 'season'])['cnt'].sum().reset_index()
+bins = [i for i in range(0, 110, 10)]
+labels = ['{}-{}'.format(i, i+10) for i in range(0, 100, 10)]
+bike_rental_data['hum_category'] = pd.cut(bike_rental_data['hum'], bins=bins, labels=labels)
 
-fig8, ax8 = plt.subplots(figsize=(16,9))
-sns.scatterplot(data=bike_rental_data, x='hum', y='cnt', hue='season', size='cnt', sizes=(20, 500), alpha=0.7, ax=ax8)
-ax8.set_title('Humidity vs Bike Rental Counts')
-ax8.set_xlabel('Humidity')
-ax8.set_ylabel('Bike Rental Count')
+bike_rental_data['hum_percent'] = (bike_rental_data['hum'] * 100).round(0).astype(int)
 
-# create a new subplot for the windspeed vs rental counts plot
-bike_rental_data['windspeed_mps'] = bike_rental_data['windspeed'] * 67
+bike_rentals_by_humidity = bike_rental_data.groupby('hum_percent')['cnt'].mean().reset_index()
 
-fig9, ax9 = plt.subplots(figsize=(12,8))
-sns.scatterplot(data=bike_rental_data, x='windspeed_mps', y='cnt', alpha=0.5, s=bike_rental_data['cnt']/10, c=bike_rental_data['season'], cmap='coolwarm')
+
+fig8, ax8 = plt.subplots()
+sns.barplot(data=bike_rentals_by_humidity, x='hum_percent', y='cnt', alpha=0.7, ax=ax8)
+ax8.set_title('Humidity vs Total Bike Rental Counts')
+ax8.set_xlabel('Humidity Category')
+ax8.set_ylabel('Total Bike Rental Count')
+ax8.set_xticks(range(10, 110, 10))
+ax8.set_xticklabels(range(10, 110, 10))
+
+
+
+bike_rental_data['windspeed_mps'] = bike_rental_data['windspeed']
+max_windspeed = int(bike_rental_data['windspeed_mps'].max())
+min_windspeed = int(bike_rental_data['windspeed_mps'].min())
+fig9, ax9 = plt.subplots(figsize=(16, 9))
+sns.barplot(data=bike_rental_data, x='windspeed_mps', y='cnt', ax=ax9)
 ax9.set_title('Windspeed vs Rental Counts', fontsize=18)
 ax9.set_xlabel('Windspeed (mps)', fontsize=14)
 ax9.set_ylabel('Rental Counts', fontsize=14)
-cbar= ax9.figure.colorbar(ax9.collections[0])
-cbar.ax.set_ylabel('Season', fontsize=14)
-ax9.set_xlim(0, 16)
+ax9.set_xticklabels(np.round(ax9.get_xticks()).astype(int), fontsize=14)
+ax9.set_yticklabels(labels, fontsize=14)
 
 
 
@@ -148,7 +161,7 @@ fig10.savefig('hourly_rental_count.png', dpi=300, bbox_inches='tight')
 fig11.savefig('casual_vs_registered.png', dpi=300, bbox_inches='tight')
 
 # Show the figures
-plt.show()
+#plt.show()
 
 
 
