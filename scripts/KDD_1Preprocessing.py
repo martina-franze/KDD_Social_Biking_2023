@@ -12,6 +12,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.neighbors import KNeighborsRegressor
+#from tensorflow.keras.models import Sequential
+#from tensorflow.keras.layers import Dense
 
 # Load a CSV file
 daydf = pd.read_csv('C:/Users/ASUS/PycharmProjects/pythonProject/KDD_Social_Biking/data/day.csv')
@@ -52,16 +55,22 @@ print(daydf)
 hourdf = data_cleaner(hourdf)
 
 def outlier_cleaner(data_frame):
-    lower_bound = data_frame['cnt'].quantile(0.25)
-    upper_bound = data_frame['cnt'].quantile(0.75)
-    data_frame_no_outliers = data_frame[(data_frame['cnt'] >= lower_bound) & (data_frame['cnt'] <= upper_bound)]
+#    lower_bound = data_frame['cnt'].quantile(0.25)
+#    upper_bound = data_frame['cnt'].quantile(0.75)
+#    data_frame_no_outliers = data_frame[(data_frame['cnt'] >= lower_bound) & (data_frame['cnt'] <= upper_bound)]
+    upper_bound = data_frame['atemp'].quantile(0.9)
+    data_frame_no_outliers = data_frame[(data_frame['atemp'] <= upper_bound)]
+    upper_bound = data_frame['windspeed'].quantile(0.9)
+    data_frame_no_outliers = data_frame[(data_frame['windspeed'] <= upper_bound)]
+    lower_bound = data_frame['windspeed'].quantile(0.1)
+    data_frame_no_outliers = data_frame[(lower_bound >= data_frame['windspeed'])]
     return(data_frame_no_outliers)
 
 daydfcl = outlier_cleaner(daydf)
 hourdfcl = outlier_cleaner(hourdf)
 
 print(daydf)
-print(hourdf)
+print(hourdfcl)
 
 def correlation(data_frame):
     correlation_matrix = data_frame.corr()
@@ -132,6 +141,39 @@ def RFR(X_train, X_test, y_train):
 
 y_predrfr = RFR(X_train, X_test, y_train)
 evaluate("Random Forest", y_predrfr, y_test)
+
+def SVRm(X_train, X_test, y_train):
+    model_svr = SVR()
+    model_svr.fit(X_train, y_train)
+    y_pred = model_svr.predict(X_test)
+    return y_pred
+
+y_predsvr = SVRm(X_train, X_test, y_train)
+evaluate("Support Vector Regression", y_predsvr, y_test)
+
+def gbr(X_train, X_test, y_train):
+    model_gb = GradientBoostingRegressor()
+    model_gb.fit(X_train, y_train)
+    y_pred = model_gb.predict(X_test)
+    return y_pred
+
+y_predgbr = gbr(X_train, X_test, y_train)
+evaluate("Gradinet Boosting Regression", y_predgbr, y_test)
+
+def knnr(X_train, X_test, y_train):
+    model_knn = KNeighborsRegressor(n_neighbors=5)
+    model_knn.fit(X_train, y_train)
+    y_pred = model_knn.predict(X_test)
+    return y_pred
+
+y_predknn = knnr(X_train, X_test, y_train)
+evaluate("K-Neighbours Regression", y_predknn, y_test)
+
+#def NeuralNetwork(X_train, X_test, y_train):
+#    model_nn = sequential()
+#    model_nn.fit(X_train, y_train)
+#    y_pred = model_nn.predict(X_test)
+#    return y_pred
 
 """modelrf = RandomForestRegressor()
 modelrf.fit(X_train, y_train)
