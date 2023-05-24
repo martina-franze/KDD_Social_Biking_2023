@@ -53,24 +53,35 @@ def data_cleaner(data_frame):
 daydf = data_cleaner(daydf)
 print(daydf)
 hourdf = data_cleaner(hourdf)
+print(hourdf)
 
-def outlier_cleaner(data_frame):
-#    lower_bound = data_frame['cnt'].quantile(0.25)
-#    upper_bound = data_frame['cnt'].quantile(0.75)
-#    data_frame_no_outliers = data_frame[(data_frame['cnt'] >= lower_bound) & (data_frame['cnt'] <= upper_bound)]
+def outlier_cleaner_atemp(data_frame):
     upper_bound = data_frame['atemp'].quantile(0.95)
     data_frame_no_outliers = data_frame[(data_frame['atemp'] <= upper_bound)]
-    upper_bound = data_frame['hum'].quantile(0.95)
-    data_frame_no_outliers = data_frame[(data_frame['hum'] <= upper_bound)]
-    lower_bound = data_frame['windspeed'].quantile(0.05)
-    data_frame_no_outliers = data_frame[(lower_bound >= data_frame['windspeed'])]
-    return data_frame
+    return(data_frame_no_outliers)
 
-outlier_cleaner(daydf)
-outlier_cleaner(hourdf)
+def outlier_cleaner_wind(data_frame):
+    upper_bound = data_frame['windspeed'].quantile(0.95)
+    data_frame_no_outliers = data_frame[(data_frame['windspeed'] <= upper_bound)]
+    return (data_frame_no_outliers)
 
-print(daydf)
-print(hourdf)
+def outlier_cleaner_hum(data_frame):
+    lower_bound = data_frame['hum'].quantile(0.05)
+    data_frame_no_outliers = data_frame[(lower_bound <= data_frame['hum'])]
+    return (data_frame_no_outliers)
+
+def outlier_cleaner(dataframe):
+    o1 = outlier_cleaner_atemp(dataframe)
+    o2 = outlier_cleaner_wind(o1)
+    o3 = outlier_cleaner_hum(o2)
+    return (o3)
+
+daydfcl = outlier_cleaner(daydf)
+hourdfcl = outlier_cleaner(hourdf)
+
+print(daydfcl)
+print("\n")
+print(hourdfcl)
 
 def correlation(data_frame):
     correlation_matrix = data_frame.corr()
@@ -78,8 +89,8 @@ def correlation(data_frame):
     print(correlation_with_target)
     return correlation_with_target
 
-correlation(daydf)
-correlation(hourdf)
+correlation(daydfcl)
+correlation(hourdfcl)
 
 def split_train_test(data_frame):
     # Split into features (X) and target variable (y)
@@ -90,7 +101,7 @@ def split_train_test(data_frame):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     return X_train, X_test, y_train, y_test
 
-X_train, X_test, y_train, y_test = split_train_test(hourdf)
+X_train, X_test, y_train, y_test = split_train_test(hourdfcl)
 
 def LR(X_train, X_test, y_train):
     # Create an instance of the LinearRegression modellr

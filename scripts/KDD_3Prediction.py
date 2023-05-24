@@ -19,17 +19,27 @@ def data_cleaner(data_frame):
     data_frame = data_frame.drop(columns=columns_to_drop)
     return data_frame
 
-def outlier_cleaner(data_frame):
-#    lower_bound = data_frame['cnt'].quantile(0.25)
-#    upper_bound = data_frame['cnt'].quantile(0.75)
-#    data_frame_no_outliers = data_frame[(data_frame['cnt'] >= lower_bound) & (data_frame['cnt'] <= upper_bound)]
+def outlier_cleaner_atemp(data_frame):
     upper_bound = data_frame['atemp'].quantile(0.95)
     data_frame_no_outliers = data_frame[(data_frame['atemp'] <= upper_bound)]
-    upper_bound = data_frame['hum'].quantile(0.95)
-    data_frame_no_outliers = data_frame[(data_frame['hum'] <= upper_bound)]
-    lower_bound = data_frame['windspeed'].quantile(0.05)
-    data_frame_no_outliers = data_frame[(lower_bound >= data_frame['windspeed'])]
-    return data_frame
+    return(data_frame_no_outliers)
+
+def outlier_cleaner_wind(data_frame):
+    upper_bound = data_frame['windspeed'].quantile(0.95)
+    data_frame_no_outliers = data_frame[(data_frame['windspeed'] <= upper_bound)]
+    return (data_frame_no_outliers)
+
+def outlier_cleaner_hum(data_frame):
+    lower_bound = data_frame['hum'].quantile(0.05)
+    data_frame_no_outliers = data_frame[(lower_bound <= data_frame['hum'])]
+    return (data_frame_no_outliers)
+
+def outlier_cleaner(dataframe):
+    o1 = outlier_cleaner_atemp(dataframe)
+    o2 = outlier_cleaner_wind(o1)
+    o3 = outlier_cleaner_hum(o2)
+    return (o3)
+
 
 def correlation(data_frame):
     correlation_matrix = data_frame.corr()
